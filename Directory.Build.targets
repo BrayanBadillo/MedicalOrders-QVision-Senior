@@ -1,0 +1,19 @@
+<Project>
+
+  <Target Name="ValidateDotNetVersion"
+          BeforeTargets="BeforeBuild">
+
+    <Error
+      Condition="
+        '$(TargetFrameworkIdentifier)' == '.NETCoreApp'
+        AND
+        '$([MSBuild]::VersionLessThan($(TargetFrameworkVersion), $(MinimumNetVersion)))' == 'true'
+      "
+      Text="
+        ERROR: El proyecto '$(MSBuildProjectName)' requiere .NET $(MinimumNetVersion) o superior.
+        Framework actual: $(TargetFramework).
+      " />
+
+  </Target>
+
+</Project>
