@@ -1,7 +1,20 @@
+using MedicalOrders.Application;
+using MedicalOrders.Infrastructure;
+using MedicalOrders.Infrastructure.Logging;
+using MedicalOrders.MedicalOrdersWorker;
 using MedicalOrders.Worker;
+using Serilog;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+var host = Host.CreateDefaultBuilder(args)
+    .UseContentRoot(AppContext.BaseDirectory)
+    .UseSerilog((context, _, logger) => logger.ConfigureOrderLogging(context.Configuration, "worker"))
+    .ConfigureServices(static (context, services) =>
+    {
+        services.AddApplication();
+        services.AddInfrastructure(context.Configuration);
+        services.Configure<WorkerOptions>(context.Configuration.GetSection(WorkerOptions.SectionName));
+        services.AddHostedService<MedicalOrdersWorker>();
+    })
+    .Build();
 
-var host = builder.Build();
-host.Run();
+await host.RunAsync();

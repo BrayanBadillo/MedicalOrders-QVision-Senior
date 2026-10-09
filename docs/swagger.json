@@ -1,0 +1,129 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Order Processing API",
+    "description": "API para el registro y consulta de órdenes médicas. El procesamiento es asíncrono (Worker Service).",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/orders": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Registra una orden médica. Queda en estado Pendiente hasta que el Worker la procese.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateOrderRequest" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Orden creada",
+            "headers": { "Location": { "description": "URL del detalle de la orden", "schema": { "type": "string" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderDto" } } }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Lista órdenes con filtros opcionales y paginación.",
+        "parameters": [
+          { "name": "patientId", "in": "query", "description": "Filtra por identificador de paciente.", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "description": "Pendiente, EnProceso, Procesada o Fallida.", "schema": { "type": "string", "enum": ["Pendiente", "EnProceso", "Procesada", "Fallida"] } },
+          { "name": "page", "in": "query", "description": "Número de página (desde 1).", "schema": { "type": "integer", "format": "int32", "default": 1, "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "description": "Tamaño de página (1 a 100).", "schema": { "type": "integer", "format": "int32", "default": 20, "minimum": 1, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listado paginado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderDtoPagedResult" } } }
+          },
+          "400": {
+            "description": "Filtros inválidos",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Consulta el detalle de una orden.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de la orden",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderDto" } } }
+          },
+          "404": {
+            "description": "La orden no existe",
+            "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateOrderRequest": {
+        "type": "object",
+        "required": ["patientId", "serviceCode", "priority"],
+        "properties": {
+          "patientId": { "type": "string", "maxLength": 50, "example": "12345" },
+          "patientName": { "type": "string", "maxLength": 200, "nullable": true, "example": "Juan Perez" },
+          "serviceCode": { "type": "string", "maxLength": 50, "example": "LAB001" },
+          "serviceDescription": { "type": "string", "maxLength": 500, "nullable": true, "example": "Hemograma" },
+          "priority": { "type": "string", "enum": ["Normal", "Urgente"], "example": "Normal" }
+        }
+      },
+      "OrderDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "patientId": { "type": "string" },
+          "patientName": { "type": "string" },
+          "serviceCode": { "type": "string" },
+          "serviceDescription": { "type": "string" },
+          "priority": { "type": "string", "enum": ["Normal", "Urgente"] },
+          "status": { "type": "string", "enum": ["Pendiente", "EnProceso", "Procesada", "Fallida"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "processingStartedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "processedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "failureReason": { "type": "string", "nullable": true }
+        }
+      },
+      "OrderDtoPagedResult": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderDto" } },
+          "page": { "type": "integer", "format": "int32" },
+          "pageSize": { "type": "integer", "format": "int32" },
+          "totalCount": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32", "readOnly": true }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "additionalProperties": {},
+        "properties": {
+          "type": { "type": "string", "nullable": true },
+          "title": { "type": "string", "nullable": true },
+          "status": { "type": "integer", "format": "int32", "nullable": true },
+          "detail": { "type": "string", "nullable": true },
+          "instance": { "type": "string", "nullable": true },
+          "traceId": { "type": "string", "nullable": true },
+          "correlationId": { "type": "string", "nullable": true },
+          "errors": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

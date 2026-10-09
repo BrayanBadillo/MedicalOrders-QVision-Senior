@@ -1,5 +1,5 @@
 using MedicalOrders.Application.Abstractions;
-using MedicalOrders.Application.Exceptions;
+using MedicalOrders.Application.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicalOrders.Infrastructure.Persistence;

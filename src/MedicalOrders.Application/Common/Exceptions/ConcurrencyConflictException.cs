@@ -1,4 +1,4 @@
-namespace MedicalOrders.Application.Exceptions;
+namespace MedicalOrders.Application.Common.Exceptions;
 
 public sealed class ConcurrencyConflictException : Exception
 {

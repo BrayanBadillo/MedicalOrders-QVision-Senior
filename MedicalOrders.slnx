@@ -6,4 +6,8 @@
     <Project Path="src/MedicalOrders.Infrastructure/MedicalOrders.Infrastructure.csproj" />
     <Project Path="src/MedicalOrders.Worker/MedicalOrders.Worker.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MedicalOrders.Application.Tests/MedicalOrders.Application.Tests.csproj" />
+    <Project Path="tests/MedicalOrders.Domain.Tests/MedicalOrders.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

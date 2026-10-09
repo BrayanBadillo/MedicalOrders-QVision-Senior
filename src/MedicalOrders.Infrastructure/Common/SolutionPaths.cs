@@ -6,7 +6,7 @@ namespace MedicalOrders.Infrastructure.Common;
 public class SolutionPaths
 {
     public const string DefaultConnectionString = "Data Source=database/orders.db";
-    private const string SolutionFileName = "OrderProcessing.sln";
+    private const string SolutionFileName = "MedicalOrders.slnx";
 
     public static string RootDirectory { get; } = FindRootDirectory();
 
@@ -41,7 +41,7 @@ public class SolutionPaths
 
         while (directory is not null)
         {
-            if (File.Exists(Path.Combine(directory.FullName, SolutionFileName)))
+            if (directory.EnumerateFiles("*.sln").Any() || directory.EnumerateFiles("*.slnx").Any())
                 return directory.FullName;
 
             directory = directory.Parent;
